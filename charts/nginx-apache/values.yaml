@@ -1,0 +1,147 @@
+---
+nameOverride: ""
+fullnameOverride: ""
+
+apache:
+  name: apache
+
+  replicaCount: 1
+
+  image:
+    repository: illusior/nginx-apache
+    tag: apache
+    pullPolicy: Always
+    imagePullSecrets: []
+    env:
+      - name: PORT
+        value: "80"
+
+  autoscaling:
+    enabled: false
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources: {}
+
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http-apache
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http-apache
+
+  volumes: []
+
+  volumeMounts: []
+
+  podAnnotations: {}
+  podLabels: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+nginx:
+  name: nginx
+
+  replicaCount: 1
+
+  image:
+    repository: illusior/nginx-apache
+    tag: nginx
+    pullPolicy: Always
+    imagePullSecrets: []
+    env:
+      - name: DOMAIN
+        value: "illusior.ru"
+      - name: PORT
+        value: "80"
+      - name: PORT_APACHE
+        value: "80"
+      - name: YC_APACHE_GATEWAY_DOMAIN
+        value: "example.com"
+      - name: HOSTNAME_APACHE
+        value: "nginx-apache-service-apache"
+
+  autoscaling:
+    enabled: false
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "250m"
+    limits:
+      memory: "300Mi"
+      cpu: "300m"
+
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http-nginx
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http-nginx
+  startupProbe:
+    httpGet:
+      path: /
+      port: http-nginx
+
+  volumes:
+    - name: nginx-config-volume
+      configMap:
+        name: nginx-images-config
+        items:
+          - key: images.conf
+            path: images.conf
+
+  volumeMounts:
+    - name: nginx-config-volume
+      mountPath: /etc/nginx/conf.d/site/locations/images.conf
+      subPath: images.conf
+
+  podAnnotations: {}
+  podLabels: {}
+
+  podSecurityContext:
+    sysctls:
+      - name: "net.ipv4.ip_unprivileged_port_start"
+        value: "0"
+
+  securityContext: {}
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  configMap:
+    name: nginx-images-config
+    data:
+      images.conf: |
+        location ~ \.jpg$ {
+          root /usr/share/nginx/html/img/image1;
+        }
+
+        location ~ \.png$ {
+          root /usr/share/nginx/html/img/image2;
+        }
+
+loadbalancer:
+  annotations:
+    yandex.cloud/load-balancer-type: external
+  externalIp: 51.250.36.61

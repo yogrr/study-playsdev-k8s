@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-auth-deploy
+  namespace: nginx-auth
+  labels:
+    app: nginx-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-auth
+  template:
+    metadata:
+      labels:
+        app: nginx-auth
+    spec:
+      securityContext:
+        sysctls:
+          - name: "net.ipv4.ip_unprivileged_port_start"
+            value: "0"
+      containers:
+        - name: nginx-auth
+          image: illusior/nginx-apache:nginx-auth
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: ng-http
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /etc/nginx/keys/.htpasswd
+              subPath: .htpasswd
+      volumes:
+        - name: shared-volume
+          persistentVolumeClaim:
+            claimName: nginx-auth

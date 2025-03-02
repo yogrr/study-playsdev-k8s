@@ -1,0 +1,81 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deploy
+  namespace: nginx-apache
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      securityContext:
+        sysctls:
+          - name: "net.ipv4.ip_unprivileged_port_start"
+            value: "0"
+      containers:
+        - name: nginx
+          image: illusior/nginx-apache:nginx
+          imagePullPolicy: Always
+          env:
+            - name: DOMAIN
+              value: "illusior.ru"
+            - name: PORT
+              value: "80"
+            - name: PORT_APACHE
+              value: "80"
+            - name: YC_APACHE_GATEWAY_DOMAIN
+              value: "example.com"
+          ports:
+            - containerPort: 80
+              name: ng-http
+            - containerPort: 443
+              name: ng-https
+          volumeMounts:
+            - name: nginx-config-volume
+              mountPath: /etc/nginx/conf.d/site/locations/images.conf
+              subPath: images.conf
+          livenessProbe:
+            httpGet:
+              path: /
+              port: ng-http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: ng-http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /
+              port: ng-http
+            failureThreshold: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "300Mi"
+              cpu: "300m"
+      volumes:
+        - name: nginx-config-volume
+          configMap:
+            name: nginx-images-config
+            items:
+              - key: images.conf
+                path: images.conf

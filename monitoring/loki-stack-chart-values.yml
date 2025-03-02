@@ -1,0 +1,127 @@
+---
+#
+# To get this config Full Version you need to:
+#
+# 1. run
+#   helm install loki grafana/loki-stack
+#
+# 2. run
+#   helm get values loki --all
+#
+
+filebeat:
+  enabled: false
+
+fluent-bit:
+  enabled: false
+
+logstash:
+  enabled: false
+
+proxy:
+  http_proxy: ""
+  https_proxy: ""
+  no_proxy: ""
+
+grafana:
+  enabled: true
+
+  admin:
+    existingSecret: ""
+    passwordKey: admin-password
+    userKey: admin-user
+  adminUser: admin
+
+  image:
+    repository: grafana/grafana
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 100Mi
+    storageClassName: yc-network-hdd
+
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+
+prometheus:
+  enabled: true
+
+  kube-state-metrics:
+    enabled: true
+
+  alertRelabelConfigs: {}
+  alertmanager:
+    enabled: false
+    persistence:
+      size: 2Gi
+    persistentVolume:
+      enabled: false
+
+  datasource:
+    jsonData: "{}"
+
+  # prometheus-node-exporter: {}
+
+  prometheus-pushgateway:
+    enabled: false
+
+  rbac:
+    create: true
+  ruleFiles: {}
+
+  server:
+    persistentVolume:
+      enabled: false
+      size: 10Gi
+      storageClassName: "standard"
+
+  serverFiles:
+    alerting_rules.yml: {}
+    # prometheus.yml: {}
+    recording_rules.yml: {}
+
+  serviceAccounts:
+    server:
+      annotations: {}
+      create: true
+      name: ""
+
+  # url: ""
+
+loki:
+  enabled: true
+
+  isDefault: false
+  url: http://{{(include "loki.serviceName" .)}}:{{ .Values.loki.service.port }}
+
+  persistence:
+    enabled: false
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+    storageClassName: "standard"
+
+  datasource:
+    jsonData: "{}"
+    uid: ""
+
+  service:
+    type: ClusterIP
+    port: 3100
+    targetPort: http-metrics
+
+promtail:
+  enabled: true
+
+  config:
+    logLevel: info
+    serverPort: 3101
+    clients:
+      - url: http://{{ .Release.Name }}:3100/loki/api/v1/push # Port is same as Loki's service

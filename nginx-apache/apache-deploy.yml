@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apache-deploy
+  namespace: nginx-apache
+  labels:
+    app: apache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apache
+  template:
+    metadata:
+      labels:
+        app: apache
+    spec:
+      containers:
+        - name: apache
+          image: illusior/nginx-apache:apache
+          imagePullPolicy: Always
+          env:
+            - name: PORT
+              value: "80"
+          ports:
+            - containerPort: 80
+              name: apache-port

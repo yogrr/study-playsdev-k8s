@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: {{ printf "%s-deployment-%s" (include "nginx-apache.name" .) .Values.apache.name }}
+  labels:
+    {{- include "nginx-apache.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ printf "%s-deployment-%s" (include "nginx-apache.name" .) .Values.apache.name }}
+
+spec:
+
+  {{- if not .Values.apache.autoscaling.enabled }}
+  replicas: {{ .Values.apache.replicaCount }}
+  {{- end }}
+
+  selector:
+    matchLabels:
+      {{- include "nginx-apache.selectorLabels" . | nindent 6 }}
+
+  template:
+    metadata:
+      {{- with .Values.apache.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      labels:
+        {{- include "nginx-apache.labels" . | nindent 8 }}
+        {{- with .Values.apache.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/name: {{ printf "%s-pod-%s" (include "nginx-apache.name" .) .Values.apache.name }}
+
+    spec:
+      {{- with .Values.apache.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.apache.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      containers:
+        - name: {{ printf "%s-container-%s" (include "nginx-apache.name" .) .Values.apache.name }}
+          {{- with .Values.apache.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          image: '{{ .Values.apache.image.repository }}:{{ .Values.apache.image.tag | default "latest" }}'
+          imagePullPolicy: {{ .Values.apache.image.pullPolicy }}
+
+          {{- with .Values.apache.image.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          ports:
+            - name: http-apache
+              containerPort: {{ .Values.apache.service.port }}
+              protocol: TCP
+
+          {{- with .Values.apache.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with .Values.apache.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with .Values.apache.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with .Values.apache.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+      {{- with .Values.apache.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.apache.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.apache.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.apache.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

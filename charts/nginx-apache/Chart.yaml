@@ -1,0 +1,19 @@
+---
+apiVersion: v2
+name: nginx-apache
+description: Helm chart for two web servers with nginx as reverse-proxy and apache
+
+type: application
+
+version: 0.1.0
+appVersion: "1.16.0"
+
+home: https://github.com/yogrr/study-playsdev-k8s/tree/master/charts/nginx-apache
+icon: https://github.com/yogrr/study-playsdev-k8s/tree/master/charts/nginx-apache.png
+keywords:
+  - nginx
+  - apache
+maintainers:
+  - name: Gazizyanov Rafail
+    url: https://github.com/yogrr
+

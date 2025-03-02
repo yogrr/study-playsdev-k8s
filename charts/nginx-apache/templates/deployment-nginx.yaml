@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-deployment-%s" (include "nginx-apache.name" .) .Values.nginx.name }}
+  labels:
+    {{- include "nginx-apache.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ printf "%s-deployment-%s" (include "nginx-apache.name" .) .Values.nginx.name }}
+
+spec:
+  {{- if not .Values.nginx.autoscaling.enabled }}
+  replicas: {{ .Values.nginx.replicaCount }}
+  {{- end }}
+
+  selector:
+    matchLabels:
+      {{- include "nginx-apache.selectorLabels" . | nindent 6 }}
+
+  template:
+
+    metadata:
+
+      {{- with .Values.nginx.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      labels:
+        {{- include "nginx-apache.labels" . | nindent 8 }}
+        {{- with .Values.nginx.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/name: {{ printf "%s-pod-%s" (include "nginx-apache.name" .) .Values.nginx.name }}
+        app: nginx
+        some: newvalue
+
+    spec:
+
+      {{- with .Values.nginx.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.nginx.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      containers:
+        - name: {{ printf "%s-container-%s" (include "nginx-apache.name" .) .Values.nginx.name }}
+          {{- with .Values.nginx.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          image: '{{ .Values.apache.image.repository }}:{{ .Values.nginx.image.tag | default "latest" }}'
+          imagePullPolicy: {{ .Values.nginx.image.pullPolicy }}
+
+          {{- with .Values.nginx.image.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          ports:
+            - name: http-nginx
+              containerPort: {{ .Values.nginx.service.port }}
+              protocol: TCP
+            - name: https-nginx
+              containerPort: 443
+              protocol: TCP
+
+          {{- with .Values.nginx.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with .Values.nginx.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with .Values.nginx.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with .Values.nginx.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with .Values.nginx.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+      {{- with .Values.nginx.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.nginx.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.nginx.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.nginx.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

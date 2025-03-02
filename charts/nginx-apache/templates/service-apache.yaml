@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ printf "%s-service-%s" "nginx-apache" .Values.apache.name }}
+  labels:
+    {{- include "nginx-apache.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.apache.service.type }}
+  ports:
+    - port: {{ .Values.apache.service.port }}
+      targetPort: http-apache
+      protocol: TCP
+      name: http-svc-apache
+  selector:
+    {{- include "nginx-apache.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-images-config
+  namespace: nginx-apache
+data:
+  images.conf: |
+    location ~ \.jpg$ {
+      root /usr/share/nginx/html/img/image1;
+    }
+
+    location ~ \.png$ {
+      root /usr/share/nginx/html/img/image2;
+    }

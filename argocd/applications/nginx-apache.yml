@@ -1,0 +1,26 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-apache
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: development
+
+  source:
+    repoURL: git@github.com:yogrr/study-playsdev-k8s.git
+    targetRevision: master
+    path: nginx-apache
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nginx-apache
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

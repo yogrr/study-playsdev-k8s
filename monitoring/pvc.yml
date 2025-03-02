@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: loki-prometheus-server
+  namespace: monitoring
+  labels:
+    app: prometheus
+    component: server
+    release: loki
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+  volumeMode: Filesystem
